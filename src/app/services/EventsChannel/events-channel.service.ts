@@ -31,7 +31,7 @@ export class EventsChannelService implements OnDestroy {
 
   ngOnDestroy(): void {
     this._subscriptions.unsubscribe();
-    // this.disconnect();
+    this.disconnect();
   }
 
   disconnect(): void {
