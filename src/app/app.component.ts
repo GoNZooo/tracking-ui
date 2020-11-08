@@ -1,4 +1,6 @@
 import {Component} from "@angular/core";
+import {ConfigurationService} from "./services/Configuration/configuration.service";
+import {environment} from "../environments/environment";
 
 @Component({
   selector: "app-root",
@@ -7,4 +9,9 @@ import {Component} from "@angular/core";
 })
 export class AppComponent {
   title = "tracking-ui";
+
+  constructor(configuration: ConfigurationService) {
+    configuration.setBaseUrl(environment.baseUrl);
+    configuration.setWebsocketBaseUrl(environment.websocketBaseUrl);
+  }
 }
