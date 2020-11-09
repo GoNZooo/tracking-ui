@@ -3,6 +3,7 @@ import * as phoenix from "phoenix";
 import {Subject, Subscription} from "rxjs";
 import {IncomingEventsChannelEvent} from "./types";
 import {ConfigurationService} from "../Configuration/configuration.service";
+import {PathReporter} from "io-ts/PathReporter";
 
 @Injectable({
   providedIn: "root",
@@ -24,6 +25,9 @@ export class EventsChannelService implements OnDestroy {
     this._channel.on("event", (payload: unknown) => {
       if (IncomingEventsChannelEvent.is(payload)) {
         this.incomingEvents.next(payload);
+      } else {
+        const validation = IncomingEventsChannelEvent.decode(payload);
+        console.log(PathReporter.report(validation));
       }
     });
     this._channel.join();
