@@ -20,7 +20,7 @@ export class EventsChannelService implements OnDestroy {
   joinForIP(ip: string): void {
     this._socket = new phoenix.Socket(`${this.configuration.websocketBaseUrl}/socket`, {});
     this._socket.connect();
-    this._channel = this._socket.channel(`events:${ip}`, {});
+    this._channel = this._socket.channel(`events-ip:${ip}`, {});
     this._channel.on("event", (payload: unknown) => {
       if (IncomingEventsChannelEvent.is(payload)) {
         this.incomingEvents.next(payload);
