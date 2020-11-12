@@ -15,13 +15,21 @@ export type ExtraData = t.TypeOf<typeof ExtraData>;
 export const Parameters = t.type({url: t.string, elementSelector: t.string, extras: ExtraData});
 export type Parameters = t.TypeOf<typeof Parameters>;
 
-export const MouseOver = t.type({name: t.literal("mouseover"), parameters: Parameters});
+export const MouseOver = t.type({
+  stream_id: t.string,
+  name: t.literal("mouseover"),
+  parameters: Parameters,
+});
 export type MouseOver = t.TypeOf<typeof MouseOver>;
 
-export const Load = t.type({name: t.literal("load"), parameters: Parameters});
+export const Load = t.type({stream_id: t.string, name: t.literal("load"), parameters: Parameters});
 export type Load = t.TypeOf<typeof Load>;
 
-export const Click = t.type({name: t.literal("click"), parameters: Parameters});
+export const Click = t.type({
+  stream_id: t.string,
+  name: t.literal("click"),
+  parameters: Parameters,
+});
 export type Click = t.TypeOf<typeof Click>;
 
 export const TrackingEvent = t.union([MouseOver, Click, Load]);
