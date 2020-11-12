@@ -1,9 +1,5 @@
 import * as t from "io-ts";
-import {TrackingStream} from "../../../tracking/types";
-
-export const Ping = t.type({type: t.literal("Ping")}, "Ping");
-
-export type Ping = t.TypeOf<typeof Ping>;
+import {TrackingEvent, TrackingStream} from "../../../tracking/types";
 
 export const Connected = t.type({type: t.literal("Connected")}, "Connected");
 
@@ -16,6 +12,13 @@ export const InitialStreams = t.type({
 
 export type InitialStreams = t.TypeOf<typeof InitialStreams>;
 
-export const IncomingEventsChannelEvent = t.union([Ping, Connected, InitialStreams]);
+export const EventReceived = t.type({
+  type: t.literal("EventReceived"),
+  event: TrackingEvent,
+});
+
+export type EventReceived = t.TypeOf<typeof EventReceived>;
+
+export const IncomingEventsChannelEvent = t.union([Connected, InitialStreams, EventReceived]);
 
 export type IncomingEventsChannelEvent = t.TypeOf<typeof IncomingEventsChannelEvent>;
