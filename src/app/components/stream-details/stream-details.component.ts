@@ -2,6 +2,12 @@ import {Component, OnDestroy, OnInit} from "@angular/core";
 import {ActivatedRoute} from "@angular/router";
 import {EventsChannelService} from "../../services/EventsChannel/events-channel.service";
 import {Subscription} from "rxjs";
+import {TrackingStream} from "../../../tracking/types";
+import {assertUnreachable} from "../../utilities";
+
+interface Streams {
+  [streamId: string]: TrackingStream;
+}
 
 @Component({
   selector: "app-stream-details",
@@ -10,6 +16,8 @@ import {Subscription} from "rxjs";
   providers: [EventsChannelService],
 })
 export class StreamDetailsComponent implements OnInit, OnDestroy {
+  public streams: Streams = {};
+
   private _ip: string;
   private _subscriptions = new Subscription();
 
@@ -25,7 +33,31 @@ export class StreamDetailsComponent implements OnInit, OnDestroy {
     this.eventsChannel.joinForIP(this._ip);
     this._subscriptions.add(
       this.eventsChannel.incomingEvents.subscribe((event) => {
-        console.log({event});
+        switch (event.type) {
+          case "Connected": {
+            break;
+          }
+
+          case "InitialStreams": {
+            event.streams.forEach((stream) => {
+              this.streams[stream.id] = stream;
+            });
+
+            break;
+          }
+
+          case "EventReceived": {
+            const streamId = event.event.stream_id;
+            const previousEvents = this.streams[streamId].events;
+            const newEvents = [...previousEvents, event.event];
+            this.streams[streamId] = {...this.streams[streamId], events: newEvents};
+
+            break;
+          }
+
+          default:
+            assertUnreachable(event);
+        }
       })
     );
   }

@@ -1,1 +1,5 @@
-<p>stream-details works!</p>
+<div role="main">
+  <ul *ngFor="let streamEntry of streams | keyvalue">
+    <li>{{ streamEntry.key }}: {{ streamEntry.value | json }}</li>
+  </ul>
+</div>
