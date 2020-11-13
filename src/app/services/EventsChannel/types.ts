@@ -14,6 +14,7 @@ export type InitialStreams = t.TypeOf<typeof InitialStreams>;
 
 export const EventReceived = t.type({
   type: t.literal("EventReceived"),
+  ip: t.string,
   event: TrackingEvent,
 });
 
