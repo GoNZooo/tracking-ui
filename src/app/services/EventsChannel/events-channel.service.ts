@@ -1,5 +1,5 @@
 import {Injectable, OnDestroy} from "@angular/core";
-import * as phoenix from "phoenix";
+import * as Phoenix from "phoenix";
 import {Subscription} from "rxjs";
 import {IncomingEventsChannelEvent} from "./types";
 import {ConfigurationService} from "../Configuration/configuration.service";
@@ -13,8 +13,8 @@ import {StreamsState} from "./events-channel.reducer";
   providedIn: "root",
 })
 export class EventsChannelService implements OnDestroy {
-  private _socket: phoenix.Socket;
-  private _channel: phoenix.Channel;
+  private _socket: Phoenix.Socket;
+  private _channel: Phoenix.Channel;
   private _subscriptions = new Subscription();
 
   constructor(private store: Store<StreamsState>, private configuration: ConfigurationService) {
@@ -22,7 +22,7 @@ export class EventsChannelService implements OnDestroy {
   }
 
   join(): void {
-    this._socket = new phoenix.Socket(`${this.configuration.websocketBaseUrl}/socket`, {});
+    this._socket = new Phoenix.Socket(`${this.configuration.websocketBaseUrl}/socket`, {});
     this._socket.connect();
     this._channel = this._socket.channel(`events:all`, {});
     this._channel.on("event", (payload: unknown) => {
