@@ -8,17 +8,24 @@ import {ConfigurationService} from "./services/Configuration/configuration.servi
 import {StreamDetailsComponent} from "./components/stream-details/stream-details.component";
 import {StoreModule} from "@ngrx/store";
 import {EffectsModule} from "@ngrx/effects";
+import {eventsChannelReducer, StreamsState} from "./services/EventsChannel/events-channel.reducer";
+import {EventsChannelService} from "./services/EventsChannel/events-channel.service";
+import {ObjectAccessPipe} from "./pipes/object-access.pipe";
+
+export interface State {
+  streams: StreamsState;
+}
 
 @NgModule({
-  declarations: [AppComponent, StreamDetailsComponent],
+  declarations: [AppComponent, StreamDetailsComponent, ObjectAccessPipe],
   imports: [
     BrowserModule,
     AppRoutingModule,
     BrowserAnimationsModule,
-    StoreModule.forRoot({}, {}),
+    StoreModule.forRoot<State>({streams: eventsChannelReducer}, {}),
     EffectsModule.forRoot([]),
   ],
-  providers: [ConfigurationService],
+  providers: [ConfigurationService, EventsChannelService],
   bootstrap: [AppComponent],
 })
 export class AppModule {}
