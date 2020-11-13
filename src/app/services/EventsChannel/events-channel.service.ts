@@ -1,33 +1,57 @@
 import {Injectable, OnDestroy} from "@angular/core";
 import * as phoenix from "phoenix";
-import {Subject, Subscription} from "rxjs";
+import {Subscription} from "rxjs";
 import {IncomingEventsChannelEvent} from "./types";
 import {ConfigurationService} from "../Configuration/configuration.service";
 import {PathReporter} from "io-ts/PathReporter";
+import {connected, initialStreams, newEvent} from "./events-channel.actions";
+import {assertUnreachable} from "../../utilities";
+import {Store} from "@ngrx/store";
+import {StreamsState} from "./events-channel.reducer";
 
 @Injectable({
   providedIn: "root",
 })
 export class EventsChannelService implements OnDestroy {
-  public incomingEvents = new Subject<IncomingEventsChannelEvent>();
-  public outgoingEvents = new Subject<unknown>();
-
   private _socket: phoenix.Socket;
   private _channel: phoenix.Channel;
   private _subscriptions = new Subscription();
 
-  constructor(private configuration: ConfigurationService) {}
+  constructor(private store: Store<StreamsState>, private configuration: ConfigurationService) {
+    this.join();
+  }
 
-  joinForIP(ip: string): void {
+  join(): void {
     this._socket = new phoenix.Socket(`${this.configuration.websocketBaseUrl}/socket`, {});
     this._socket.connect();
-    this._channel = this._socket.channel(`events-ip:${ip}`, {});
+    this._channel = this._socket.channel(`events:all`, {});
     this._channel.on("event", (payload: unknown) => {
       if (IncomingEventsChannelEvent.is(payload)) {
-        this.incomingEvents.next(payload);
+        switch (payload.type) {
+          case "Connected": {
+            this.store.dispatch(connected());
+
+            break;
+          }
+
+          case "InitialStreams": {
+            this.store.dispatch(initialStreams(payload));
+
+            break;
+          }
+
+          case "EventReceived": {
+            this.store.dispatch(newEvent({ip: payload.ip, event: payload.event}));
+
+            break;
+          }
+
+          default:
+            assertUnreachable(payload);
+        }
       } else {
         const validation = IncomingEventsChannelEvent.decode(payload);
-        console.log(PathReporter.report(validation));
+        console.error(PathReporter.report(validation));
       }
     });
     this._channel.join();

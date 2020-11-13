@@ -1,5 +1,7 @@
 <div role="main">
-  <ul *ngFor="let streamEntry of streams | keyvalue">
-    <li>{{ streamEntry.key }}: {{ streamEntry.value | json }}</li>
+  <ul *ngFor="let event of events | async">
+    <li>
+      <pre>{{ event | json }}</pre>
+    </li>
   </ul>
 </div>

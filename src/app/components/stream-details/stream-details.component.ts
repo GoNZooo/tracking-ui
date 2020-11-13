@@ -1,69 +1,56 @@
-import {Component, OnDestroy, OnInit} from "@angular/core";
-import {ActivatedRoute} from "@angular/router";
+import {Component} from "@angular/core";
+import {Observable} from "rxjs";
+import {map} from "rxjs/operators";
+import {StreamsState} from "../../services/EventsChannel/events-channel.reducer";
+import {Store} from "@ngrx/store";
 import {EventsChannelService} from "../../services/EventsChannel/events-channel.service";
-import {Subscription} from "rxjs";
-import {TrackingStream} from "../../../tracking/types";
-import {assertUnreachable} from "../../utilities";
-
-interface Streams {
-  [streamId: string]: TrackingStream;
-}
+import {State} from "../../app.module";
+import {TrackingEvent, TrackingStream} from "../../../tracking/types";
 
 @Component({
   selector: "app-stream-details",
   templateUrl: "./stream-details.component.html",
   styleUrls: ["./stream-details.component.scss"],
-  providers: [EventsChannelService],
+  providers: [],
 })
-export class StreamDetailsComponent implements OnInit, OnDestroy {
-  public streams: Streams = {};
+export class StreamDetailsComponent {
+  ips: Observable<string[]>;
+  ipEntries: Observable<IpEntry[]>;
+  events: Observable<TrackingEvent[]>;
 
-  private _ip: string;
-  private _subscriptions = new Subscription();
+  private _streams: Observable<StreamsState>;
 
-  constructor(private activatedRoute: ActivatedRoute, private eventsChannel: EventsChannelService) {
-    this._subscriptions.add(
-      this.activatedRoute.paramMap.subscribe((parameters) => {
-        this._ip = parameters.get("ip");
+  constructor(eventsChannel: EventsChannelService, store: Store<State>) {
+    this._streams = store.select((state) => state.streams);
+
+    this.ips = this._streams.pipe(map((s) => Object.keys(s)));
+
+    this.ipEntries = this._streams.pipe(
+      map((s) =>
+        Object.keys(s).map((ip) => {
+          const streams = Object.keys(s[ip]).map((streamId) => s[ip][streamId]);
+
+          return {ip, streams};
+        })
+      )
+    );
+
+    this.events = this.ipEntries.pipe(
+      map((ipEntries) => {
+        return ipEntries.reduce<TrackingEvent[]>((es, ipEntry) => {
+          const events = ipEntry.streams.reduce<TrackingEvent[]>(
+            (streamEvents, stream) => [...streamEvents, ...stream.events],
+            []
+          );
+
+          return [...es, ...events];
+        }, []);
       })
     );
   }
+}
 
-  ngOnInit(): void {
-    this.eventsChannel.joinForIP(this._ip);
-    this._subscriptions.add(
-      this.eventsChannel.incomingEvents.subscribe((event) => {
-        switch (event.type) {
-          case "Connected": {
-            break;
-          }
-
-          case "InitialStreams": {
-            event.streams.forEach((stream) => {
-              this.streams[stream.id] = stream;
-            });
-
-            break;
-          }
-
-          case "EventReceived": {
-            const streamId = event.event.stream_id;
-            const previousEvents = this.streams[streamId].events;
-            const newEvents = [...previousEvents, event.event];
-            this.streams[streamId] = {...this.streams[streamId], events: newEvents};
-
-            break;
-          }
-
-          default:
-            assertUnreachable(event);
-        }
-      })
-    );
-  }
-
-  ngOnDestroy(): void {
-    this._subscriptions.unsubscribe();
-    this.eventsChannel.disconnect();
-  }
+interface IpEntry {
+  ip: string;
+  streams: TrackingStream[];
 }
